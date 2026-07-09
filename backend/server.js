@@ -5,6 +5,7 @@ const AppError=require('./utils/appError.js');
 const globalErrorHandler=require('./middleware/errorMiddleware.js');
 const complaintRouter=require('./routes/complaintRoutes.js');
 const authRouter = require('./routes/authRoutes.js');
+const analyticsRouter = require('./routes/analyticsRoutes.js');
 const http=require('http');
 const cookieParser=require('cookie-parser');
 dotenv.config({path:'./.env'});
@@ -22,6 +23,7 @@ app.all('*',(req,res,next)=>{
 });
 app.use(globalErrorHandler);
 const PORT = process.env.PORT || 5000;
+app.use('/api/v1/analytics', analyticsRouter);
 app.listen(PORT, () => {
     console.log(`Application running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
