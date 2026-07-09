@@ -17,4 +17,17 @@ router.patch(
     restrictTo('admin'),
     complaintController.assignWorker
 );
+router.patch(
+    '/:id/start-progress',
+    protect,
+    restrictTo('worker'),
+    complaintController.markInProgress
+);
+router.patch(
+    '/:id/resolve',
+    protect,
+    restrictTo('worker'),
+    uploadImage.single('afterImage'),
+    complaintController.resolveComplaint
+);
 module.exports=router;

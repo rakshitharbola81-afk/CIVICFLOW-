@@ -56,7 +56,8 @@ exports.createComplaint=catchAsync(async(req,res,next)=>{
             complaint: newComplaint
         }
     });
-})
+});
+
 exports.assignWorker = catchAsync(async (req, res, next) => {
     const { complaintId, workerId } = req.body;
 
@@ -87,3 +88,65 @@ exports.assignWorker = catchAsync(async (req, res, next) => {
         data: { complaint }
     });
 });
+
+exports.markInProgress=catchAsync(async(req,res,next)=>{
+    const complaint = await Complaint.findById(req.params.id);
+    if(!complaint){
+        return next(new AppError('No complaint found with that ID.',404));
+    }
+    if(complaint.assignedWorker.toString()!==req.user._id.toString()){
+        return next(new AppError('This complaint is not assigned to you.',403));
+    }
+    const previousStatus=complaint.status;
+    complaint.status='In Progress';
+    await complaint.save();
+    await AuditLog.create({
+        complaint: complaint._id,
+        actionBy: req.user._id,
+        action: 'STATUS_CHANGE',
+        fromStatus: previousStatus,
+        toStatus: 'In Progress',
+        comment: `Worker ${req.user.name} has started working on this complaint.`
+    });
+    res.status(200).json({
+        status: 'success',
+        message: 'Complaint marked as In Progress.',
+        data: { complaint }
+    });
+});
+
+exports.resolveComplaint=catchAsync(async(req,res,next)=>{
+    const complaint = await Complaint.findById(req.params.id);
+    if(!complaint){
+        return next(new AppError('No complaint found with that ID.',404));
+    }
+    if(complaint.assignWorker.toString()!==req.user._id.toString()){
+        return next(new AppError('This complaint is not assigned to you.',403));
+    }
+    if (complaint.status !== 'In Progress') {
+        return next(new AppError(`Cannot resolve. First mark it 'In Progress'. Current: '${complaint.status}'.`, 400));
+    }
+    if(!req.file){
+        return next(new AppError('Please upload an after-image as proof of completion.',400));
+    }
+    const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+    complaint.images.afterUrl = cloudinaryResult.url;
+    complaint.images.afterPublicId = cloudinaryResult.publicId;
+    complaint.status = 'Resolved';
+    complaint.resolvedAt = new Date();
+    complaint.workNotes = req.body.workNotes || '';
+    await complaint.save();
+    await AuditLog.create({
+        complaint: complaint._id,
+        actionBy: req.user._id,
+        action: 'STATUS_CHANGE',
+        fromStatus: 'In Progress',
+        toStatus: 'Resolved',
+        comment: req.body.workNotes || `Complaint resolved by Worker ${req.user.name}.`
+    });
+    res.status(200).json({
+        status: 'success',
+        message: 'Complaint resolved successfully with after-image proof.',
+        data: { complaint }
+    });
+})
