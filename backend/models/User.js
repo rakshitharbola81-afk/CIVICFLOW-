@@ -18,7 +18,6 @@ const userSchema=new mongoose.Schema(
         password:{
             type:String,
             required:[true, 'Please enter your password'],
-            unique:true,
             minlength:8,
             select:false
         },
@@ -42,7 +41,6 @@ const userSchema=new mongoose.Schema(
 userSchema.pre('save',async function (next) {
     if(!this.isModified('password'))return next();
     this.password=await bcrypt.hash(this.password,12);
-    next();
     
 })
 userSchema.methods.correctPassword=async function (candidatePassword,userPassword){

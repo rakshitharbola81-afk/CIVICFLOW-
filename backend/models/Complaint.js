@@ -13,7 +13,7 @@ const complaintSchema = new mongoose.Schema(
         category:{
             type:String,
             required:[true,'Category of the complaint is required'],
-            enum:['Pothole','Garbage Overflow','Water Leakage','Broken street light'],
+            enum: ['Pothole', 'Garbage Overflow', 'Water Leakage', 'Broken Street Light', 'Road Damage', 'Other'],
         },
         priority:{
             type:String,
@@ -29,6 +29,13 @@ const complaintSchema = new mongoose.Schema(
             type:mongoose.Schema.Types.ObjectId,
             ref:'User',
             required:[true,'Complaint must belong to a citizen']
+        },
+        assignedWorker: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        assignedAt: {
+            type: Date
         },
         location:{
             type:{

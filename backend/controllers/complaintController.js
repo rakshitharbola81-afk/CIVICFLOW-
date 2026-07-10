@@ -34,6 +34,10 @@ exports.createComplaint=catchAsync(async(req,res,next)=>{
             analyzedAt:new Date()
         }
     })
+    const emailBody = aiAnalysis.emailBody
+        .replace(/\[Location\]/g, address || 'Not specified')
+        .replace(/\[Complaint ID\]/g, newComplaint._id)
+        .replace(/\[Your Name\]/g, 'CivicFlow AI System');
     const emailHtmlContent = `
     <h3>New Civic Complaint Registered via CivicFlow AI</h3>
     <p><strong>Complaint ID:</strong> ${newComplaint._id}</p>
@@ -74,8 +78,8 @@ exports.assignWorker = catchAsync(async (req, res, next) => {
     await complaint.save();
 
     await AuditLog.create({
-        complaint: complaintId,
-        actionBy: req.user._id,
+        complaintId: complaintId,
+        performedBy: req.user._id,
         action: 'STATUS_CHANGE',
         fromStatus: 'Pending',
         toStatus: 'Assigned',
@@ -101,8 +105,8 @@ exports.markInProgress=catchAsync(async(req,res,next)=>{
     complaint.status='In Progress';
     await complaint.save();
     await AuditLog.create({
-        complaint: complaint._id,
-        actionBy: req.user._id,
+        complaintId: complaint._id,
+        performedBy: req.user._id,
         action: 'STATUS_CHANGE',
         fromStatus: previousStatus,
         toStatus: 'In Progress',
@@ -120,7 +124,7 @@ exports.resolveComplaint=catchAsync(async(req,res,next)=>{
     if(!complaint){
         return next(new AppError('No complaint found with that ID.',404));
     }
-    if(complaint.assignWorker.toString()!==req.user._id.toString()){
+    if(complaint.assignedWorker.toString()!==req.user._id.toString()){
         return next(new AppError('This complaint is not assigned to you.',403));
     }
     if (complaint.status !== 'In Progress') {
@@ -137,8 +141,8 @@ exports.resolveComplaint=catchAsync(async(req,res,next)=>{
     complaint.workNotes = req.body.workNotes || '';
     await complaint.save();
     await AuditLog.create({
-        complaint: complaint._id,
-        actionBy: req.user._id,
+        complaintId: complaint._id,
+        performedBy: req.user._id,
         action: 'STATUS_CHANGE',
         fromStatus: 'In Progress',
         toStatus: 'Resolved',

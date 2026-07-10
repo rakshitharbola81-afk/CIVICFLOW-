@@ -8,12 +8,12 @@ exports.getCategoryStats=catchAsync(async(req,res,next)=>{
                 total:{$sum:1},
                 resolved:{
                     $sum:{
-                        $cond:[{$eq:['$status','Resolved']},]
+                        $cond:[{$eq:['$status','Resolved']},1,0]
                     }
                 },
                 pending:{
                     $sum:{
-                        $cond:[{$ne:['$status','Resolved']},]
+                        $cond:[{$ne:['$status','Resolved']},1,0]
                     }
                 }
             }

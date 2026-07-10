@@ -12,9 +12,9 @@ exports.analyzeComplaintImage=async(imageUrl,userDescription)=>{
     CRITICAL: The entire response must be in English. Do not include any conversational text outside the JSON block.
     `
     const response= await groq.chat.completions.create(({
-        model: 'llama-3.2-11b-vision-preview',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages:[
-            {role:'system',content:'systemPrompt'},
+            {role:'system',content:systemPrompt},
             {
                 role:'user',
                 content:[
