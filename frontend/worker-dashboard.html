@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Worker Dashboard · CivicFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="shared.js"></script>
+</head>
+
+<body class="min-h-screen bg-[#0f0f1a] text-white">
+    <div class="fixed inset-0 -z-10 pointer-events-none">
+        <div class="orb w-[500px] h-[500px] bg-violet-600 top-[-150px] left-[-100px]"></div>
+        <div class="orb w-[500px] h-[500px] bg-cyan-500 bottom-[-200px] right-[-100px]"></div>
+    </div>
+
+    <div class="flex min-h-screen">
+        <aside class="hidden md:flex flex-col w-64 p-4 glass-strong m-4 rounded-2xl">
+            <div class="flex items-center gap-2 px-2 py-3">
+                <div class="w-8 h-8 rounded-lg grad-btn flex items-center justify-center font-bold">C</div>
+                <span class="font-bold">CivicFlow</span>
+            </div>
+            <nav class="mt-4 space-y-1 text-sm">
+                <a href="#tasks" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10">🛠 My Assignments</a>
+            </nav>
+            <div class="mt-auto space-y-3">
+                <div class="glass-card p-3">
+                    <div class="text-xs text-white/50">Signed in as</div>
+                    <div id="side-user" class="font-semibold truncate">—</div>
+                    <div class="text-xs text-white/50 mt-1">Worker</div>
+                </div>
+                <button onclick="logout()"
+                    class="w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 transition text-sm">Logout</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-4 md:p-8 space-y-6">
+            <header class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">Worker Portal</h1>
+                    <p class="text-white/60 text-sm">Complete assigned tasks and log your work.</p>
+                </div>
+                <button onclick="logout()" class="md:hidden px-3 py-2 rounded-lg glass-card text-sm">Logout</button>
+            </header>
+
+            <section id="tasks">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Assigned complaints</h2>
+                    <button id="refresh-btn" class="text-sm text-white/60 hover:text-white">↻ Refresh</button>
+                </div>
+                <div id="task-list" class="grid md:grid-cols-2 gap-4">
+                    <div class="glass-card p-6 text-white/50 text-sm">Loading...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Resolve modal -->
+    <div id="resolve-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="glass-strong rounded-2xl p-6 w-full max-w-md animate-pop">
+            <h3 class="text-xl font-bold">Resolve complaint</h3>
+            <p class="text-white/60 text-sm">Upload proof and describe the work done.</p>
+            <form id="resolve-form" class="mt-4 space-y-4">
+                <input type="hidden" name="id" />
+                <div>
+                    <label class="text-xs uppercase text-white/60">After photo</label>
+                    <input type="file" name="afterImage" accept="image/*" required class="mt-1" />
+                </div>
+                <div>
+                    <label class="text-xs uppercase text-white/60">Work notes</label>
+                    <textarea name="workNotes" rows="4" required placeholder="What did you do?" class="mt-1"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeResolve()"
+                        class="px-4 py-2 rounded-xl glass-card hover:bg-white/10 text-sm">Cancel</button>
+                    <button id="resolve-btn" type="submit"
+                        class="grad-btn px-4 py-2 rounded-xl text-sm font-semibold">Mark Resolved</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        if (requireAuth(['worker'])) {
+            document.getElementById('side-user').textContent = getUser() || 'Worker';
+
+            function timeline(status) {
+                const steps = ['Assigned', 'In Progress','Verification Pending', 'Resolved'];
+                const idx = Math.max(0, steps.indexOf(status));
+                return `<div class="flex items-center gap-2 mt-4">
+      ${steps.map((s, i) => `
+        <div class="flex items-center gap-2 flex-1">
+          <div class="w-3 h-3 rounded-full ${i <= idx ? 'grad-btn' : 'bg-white/15'}"></div>
+          <div class="text-[10px] uppercase tracking-wider ${i <= idx ? 'text-white' : 'text-white/40'}">${s}</div>
+          ${i < steps.length - 1 ? `<div class="flex-1 h-px ${i < idx ? 'bg-cyan-400/60' : 'bg-white/10'}"></div>` : ''}
+        </div>
+      `).join('')}
+    </div>`;
+            }
+
+            async function loadTasks() {
+                const list = document.getElementById('task-list');
+                list.innerHTML = '<div class="glass-card p-6 text-white/50 text-sm">Loading...</div>';
+                try {
+                    let data;
+                    try { data = await apiFetch('/complaints/assigned'); }
+                    catch {
+                        try { data = await apiFetch('/complaints/my-assigned'); }
+                        catch { data = await apiFetch('/complaints/worker'); }
+                    }
+                    const items = Array.isArray(data)
+                        ? data
+                        : (data.data?.complaints || []);
+                    if (!items.length) {
+                        list.innerHTML = '<div class="glass-card p-6 text-white/50 text-sm md:col-span-2">No assignments yet.</div>';
+                        return;
+                    }
+                    list.innerHTML = items.map(c => {
+                        const id = c._id || c.id;
+                        return `
+        <div class="glass-card tilt p-5 flex flex-col">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="font-semibold">${c.title || 'Untitled'}</h3>
+            ${statusBadge(c.status)}
+          </div>
+          <p class="text-white/60 text-sm mt-2 line-clamp-3">${c.description || ''}</p>
+          <div class="flex flex-wrap gap-2 mt-3 text-xs text-white/50">
+            ${c.category ? `<span class="glass-card px-2 py-1 rounded">📂 ${c.category}</span>` : ''}
+            ${c.priority ? `<span class="glass-card px-2 py-1 rounded">⚡ ${c.priority}</span>` : ''}
+            ${c.location?.address ? `<span class="glass-card px-2 py-1 rounded">📍 ${c.location.address}</span>` : ''}
+          </div>
+          ${timeline(c.status)}
+          ${c.status === 'Verification Pending'
+                                ? `
+<div class="mt-3 text-yellow-300 text-xs font-medium">
+    ⏳ Waiting for Admin Verification
+</div>
+`
+                                : ''}
+          <div class="mt-4 flex gap-2">
+           ${c.status === 'Assigned'? `<button data-start="${id}" class="glass-card hover:bg-white/10 px-3 py-2 rounded-lg text-xs font-semibold">▶ Start</button>`: ''}
+            ${c.status === 'In Progress'
+                                ? `<button data-resolve="${id}" class="grad-btn px-3 py-2 rounded-lg text-xs font-semibold">
+✓ Resolve
+</button>`
+                                : ''}
+          </div>
+        </div>`;
+                    }).join('');
+
+                    list.querySelectorAll('[data-start]').forEach(b => {
+                        b.onclick = async () => {
+                            const id = b.dataset.start;
+                            b.disabled = true; b.innerHTML = spinner('w-4 h-4');
+                            try {
+                                await apiFetch(`/complaints/${id}/start-progress`, { method: 'PATCH' });
+                                toast('Marked in progress', 'success'); loadTasks();
+                            } catch (err) { toast(err.message, 'error'); b.disabled = false; b.innerHTML = '▶ Start'; }
+                        };
+                    });
+                    list.querySelectorAll('[data-resolve]').forEach(b => {
+                        b.onclick = () => openResolve(b.dataset.resolve);
+                    });
+                } catch (err) {
+                    list.innerHTML = `<div class="glass-card p-6 text-white/50 text-sm md:col-span-2">Could not load: ${err.message}</div>`;
+                }
+            }
+
+            function openResolve(id) {
+                const m = document.getElementById('resolve-modal');
+                m.querySelector('[name=id]').value = id;
+                m.classList.remove('hidden'); m.classList.add('flex');
+            }
+            window.closeResolve = () => {
+                const m = document.getElementById('resolve-modal');
+                m.classList.add('hidden'); m.classList.remove('flex');
+            };
+
+            document.getElementById('resolve-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const id = form.id.value;
+                const fd = new FormData();
+                fd.append('afterImage', form.afterImage.files[0]);
+                fd.append('workNotes', form.workNotes.value);
+                const btn = document.getElementById('resolve-btn');
+                const orig = btn.innerHTML;
+                btn.disabled = true; btn.innerHTML = spinner() + ' Saving...';
+                try {
+                    await apiFetch(`/complaints/${id}/resolve`, { method: 'PATCH', body: fd });
+                    toast('Proof submitted. Waiting for admin approval.', 'success');
+                    form.reset(); closeResolve(); loadTasks();
+                } catch (err) { toast(err.message, 'error'); }
+                finally { btn.disabled = false; btn.innerHTML = orig; }
+            });
+
+            document.getElementById('refresh-btn').onclick = loadTasks;
+            loadTasks();
+        }
+    </script>
+</body>
+
+</html>

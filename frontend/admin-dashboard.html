@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Dashboard · CivicFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="shared.js"></script>
+</head>
+
+<body class="min-h-screen bg-[#0f0f1a] text-white">
+    <div class="fixed inset-0 -z-10 pointer-events-none">
+        <div class="orb w-[500px] h-[500px] bg-violet-600 top-[-150px] left-[-100px]"></div>
+        <div class="orb w-[500px] h-[500px] bg-cyan-500 bottom-[-200px] right-[-100px]"></div>
+    </div>
+
+    <div class="flex min-h-screen">
+        <aside class="hidden md:flex flex-col w-64 p-4 glass-strong m-4 rounded-2xl">
+            <div class="flex items-center gap-2 px-2 py-3">
+                <div class="w-8 h-8 rounded-lg grad-btn flex items-center justify-center font-bold">C</div>
+                <span class="font-bold">CivicFlow</span>
+            </div>
+            <nav class="mt-4 space-y-1 text-sm">
+                <a href="#stats" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10">📊 Overview</a>
+                <a href="#complaints" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5">📋
+                    Complaints</a>
+                <a href="#analytics" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5">📈
+                    Analytics</a>
+            </nav>
+            <div class="mt-auto space-y-3">
+                <div class="glass-card p-3">
+                    <div class="text-xs text-white/50">Signed in as</div>
+                    <div id="side-user" class="font-semibold truncate">—</div>
+                    <div class="text-xs text-white/50 mt-1">Admin</div>
+                </div>
+                <button onclick="logout()"
+                    class="w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 transition text-sm">Logout</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-4 md:p-8 space-y-8">
+            <header class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">Admin Control Panel</h1>
+                    <p class="text-white/60 text-sm">Monitor, assign, and analyze complaints across the city.</p>
+                </div>
+                <button onclick="logout()" class="md:hidden px-3 py-2 rounded-lg glass-card text-sm">Logout</button>
+            </header>
+
+            <!-- Stats -->
+            <section id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card tilt p-5">
+                    <div class="text-xs uppercase text-white/50">Total</div>
+                    <div id="stat-total" class="text-3xl font-bold mt-2 grad-text">—</div>
+                </div>
+                <div class="glass-card tilt p-5">
+                    <div class="text-xs uppercase text-white/50">Pending</div>
+                    <div id="stat-pending" class="text-3xl font-bold mt-2 text-yellow-300">—</div>
+                </div>
+                <div class="glass-card tilt p-5">
+                    <div class="text-xs uppercase text-white/50">Resolved</div>
+                    <div id="stat-resolved" class="text-3xl font-bold mt-2 text-emerald-300">—</div>
+                </div>
+                <div class="glass-card tilt p-5">
+                    <div class="text-xs uppercase text-white/50">Workers</div>
+                    <div id="stat-workers" class="text-3xl font-bold mt-2 text-cyan-300">—</div>
+                </div>
+            </section>
+
+            <!-- Complaints -->
+            <section id="complaints" class="glass-card p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <h2 class="text-xl font-semibold">All complaints</h2>
+                    <div class="flex gap-2">
+                        <select id="filter-status" class="max-w-[180px]">
+                            <option value="">All statuses</option>
+                            <option>Pending</option>
+                            <option>Assigned</option>
+                            <option>In Progress</option>
+                            <option>Resolved</option>
+                        </select>
+                        <select id="filter-category" class="max-w-[180px]">
+                            <option value="">All categories</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm min-w-[720px]">
+                        <thead class="text-white/50 text-xs uppercase text-left">
+                            <tr>
+                                <th class="py-3 px-3">Title</th>
+                                <th class="py-3 px-3">Category</th>
+                                <th class="py-3 px-3">Priority</th>
+                                <th class="py-3 px-3">Status</th>
+                                <th class="py-3 px-3">Address</th>
+                                <th class="py-3 px-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="complaints-body">
+                            <tr>
+                                <td colspan="6" class="py-6 text-center text-white/50">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics -->
+            <section id="analytics" class="grid lg:grid-cols-2 gap-4">
+                <div class="glass-card p-6">
+                    <h3 class="font-semibold mb-3">Category Stats</h3><canvas id="chart-category"></canvas>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="font-semibold mb-3">Monthly Velocity</h3><canvas id="chart-velocity"></canvas>
+                </div>
+                <div class="glass-card p-6 lg:col-span-2">
+                    <h3 class="font-semibold mb-3">Area Trends</h3>
+                    <div class="max-w-md mx-auto"><canvas id="chart-area"></canvas></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Assign modal -->
+    <div id="assign-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="glass-strong rounded-2xl p-6 w-full max-w-md animate-pop">
+            <h3 class="text-xl font-bold">Assign worker</h3>
+            <p class="text-white/60 text-sm">Choose a worker to handle this complaint.</p>
+            <form id="assign-form" class="mt-4 space-y-4">
+                <input type="hidden" name="complaintId" />
+                <div>
+                    <label class="text-xs uppercase text-white/60">Worker</label>
+                    <select name="workerId" id="worker-select" required class="mt-1"></select>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeAssign()"
+                        class="px-4 py-2 rounded-xl glass-card hover:bg-white/10 text-sm">Cancel</button>
+                    <button id="assign-btn" type="submit"
+                        class="grad-btn px-4 py-2 rounded-xl text-sm font-semibold">Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        if (requireAuth(['admin'])) {
+            document.getElementById('side-user').textContent = getUser() || 'Admin';
+            let allComplaints = [], allWorkers = [];
+
+            function openAssign(id) {
+                const modal = document.getElementById('assign-modal');
+                modal.querySelector('[name=complaintId]').value = id;
+                const sel = document.getElementById('worker-select');
+                sel.innerHTML = allWorkers.length
+                    ? allWorkers.map(w => `<option value="${w._id || w.id}">${w.name || w.email}</option>`).join('')
+                    : '<option value="">No workers available</option>';
+                modal.classList.remove('hidden'); modal.classList.add('flex');
+            }
+            window.closeAssign = () => {
+                const m = document.getElementById('assign-modal');
+                m.classList.add('hidden'); m.classList.remove('flex');
+            };
+
+            document.getElementById('assign-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const btn = document.getElementById('assign-btn');
+                const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = spinner() + ' Assigning...';
+                try {
+                    await apiFetch('/complaints/assign', {
+                        method: 'PATCH',
+                        body: JSON.stringify({ complaintId: fd.get('complaintId'), workerId: fd.get('workerId') }),
+                    });
+                    toast('Worker assigned', 'success');
+                    closeAssign(); loadAll();
+                } catch (err) { toast(err.message, 'error'); }
+                finally { btn.disabled = false; btn.innerHTML = orig; }
+            });
+
+            function renderTable() {
+                const status = document.getElementById('filter-status').value;
+                const category = document.getElementById('filter-category').value;
+                const rows = allComplaints.filter(c =>
+                    (!status || c.status === status) && (!category || c.category === category)
+                );
+                const body = document.getElementById('complaints-body');
+                if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-white/50">No complaints match.</td></tr>'; return; }
+                body.innerHTML = rows.map(c => `
+      <tr class="border-t border-white/5 hover:bg-white/5 transition">
+        <td class="py-3 px-3 font-medium">${c.title || '—'}</td>
+        <td class="py-3 px-3 text-white/70">${c.category || '—'}</td>
+        <td class="py-3 px-3 text-white/70">${c.priority || '—'}</td>
+        <td class="py-3 px-3">${statusBadge(c.status)}</td>
+        <td class="py-3 px-3 text-white/70 max-w-[200px] truncate">
+    ${c.location?.address || '—'}
+</td>
+
+<td class="py-3 px-3 text-right">
+
+${c.status === "Pending"
+                        ? `
+<button onclick="openAssign('${c._id}')" class="grad-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
+Assign
+</button>
+`
+                        : ''}
+
+${c.status === "Verification Pending"
+                        ? `
+<button onclick="approveComplaint('${c._id}')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg text-xs mr-2">
+Approve
+</button>
+
+<button onclick="rejectComplaint('${c._id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg text-xs">
+Reject
+</button>
+` : ''}
+
+</td>
+      </tr>`).join('');
+            }
+            window.approveComplaint = async function (id) {
+
+                try {
+
+                    await apiFetch(`/complaints/${id}/approve`, {
+                        method: "PATCH"
+                    });
+
+                    toast("Complaint Approved", "success");
+
+                    loadAll();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                }
+
+            }
+            window.rejectComplaint = async function (id) {
+
+                try {
+
+                    await apiFetch(`/complaints/${id}/reject`, {
+                        method: "PATCH"
+                    });
+
+                    toast("Complaint Rejected", "success");
+
+                    loadAll();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                }
+
+            }
+            window.openAssign = openAssign;
+
+            async function loadAll() {
+                try {
+                    const data = await apiFetch('/complaints/all');
+
+                    allComplaints = Array.isArray(data)
+                        ? data
+                        : (data.data?.complaints || data.complaints || []);
+
+                } catch (err) {
+                    allComplaints = [];
+                    toast(err.message || 'Could not load complaints', 'error');
+                }
+
+                document.getElementById('stat-total').textContent = allComplaints.length;
+                document.getElementById('stat-pending').textContent = allComplaints.filter(c => c.status === 'Pending').length;
+                document.getElementById('stat-resolved').textContent = allComplaints.filter(c => c.status === 'Resolved').length;
+
+                const cats = [...new Set(allComplaints.map(c => c.category).filter(Boolean))];
+                document.getElementById('filter-category').innerHTML = '<option value="">All categories</option>' + cats.map(c => `<option>${c}</option>`).join('');
+
+                try {
+                    const w = await apiFetch('/users/workers');
+
+                    console.log("Workers API Response:", w);
+
+                    allWorkers = Array.isArray(w)
+                        ? w
+                        : (w.data?.workers || []);
+
+                    console.log("Parsed Workers:", allWorkers);
+
+                } catch (err) {
+                    console.error(err);
+                    allWorkers = [];
+                }
+                document.getElementById('stat-workers').textContent = allWorkers.length;
+
+                renderTable();
+            }
+
+            document.getElementById('filter-status').onchange = renderTable;
+            document.getElementById('filter-category').onchange = renderTable;
+
+            // Analytics
+            const gridColor = 'rgba(255,255,255,0.08)';
+            const tickColor = 'rgba(255,255,255,0.6)';
+            Chart.defaults.color = tickColor;
+            Chart.defaults.borderColor = gridColor;
+
+            async function loadCharts() {
+                // Category bar
+                try {
+                    const d = await apiFetch('/analytics/category-stats');
+                    const arr = Array.isArray(d)
+                        ? d
+                        : (d.data?.stats || d.stats || []);
+                    const labels = arr.map(x => x.category || x._id || x.name);
+                    const values = arr.map(x => x.count || x.total || x.value || 0);
+                    new Chart(document.getElementById('chart-category'), {
+                        type: 'bar',
+                        data: { labels, datasets: [{ label: 'Complaints', data: values, backgroundColor: 'rgba(124,58,237,0.7)', borderColor: '#a78bfa', borderWidth: 1, borderRadius: 8 }] },
+                        options: { responsive: true, scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor } } }, plugins: { legend: { display: false } } },
+                    });
+                } catch (e) { }
+
+                try {
+                    const d = await apiFetch('/analytics/monthly-velocity');
+                    const arr = Array.isArray(d)
+                        ? d
+                        : (d.data?.velocity || d.velocity || []);
+                    const labels = arr.map(x => x.month || x._id || x.label);
+                    const values = arr.map(x => x.count || x.total || x.value || 0);
+                    new Chart(document.getElementById('chart-velocity'), {
+                        type: 'line',
+                        data: { labels, datasets: [{ label: 'Complaints', data: values, borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.2)', tension: 0.4, fill: true, pointBackgroundColor: '#22d3ee' }] },
+                        options: { responsive: true, scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor } } } },
+                    });
+                } catch (e) { }
+
+                try {
+                    const d = await apiFetch('/analytics/area-trends');
+                    const arr = Array.isArray(d)
+                        ? d
+                        : (d.data?.trends || d.trends || []);
+                    const labels = arr.map(x => x.area || x._id || x.name);
+                    const values = arr.map(x => x.count || x.total || x.value || 0);
+                    new Chart(document.getElementById('chart-area'), {
+                        type: 'doughnut',
+                        data: { labels, datasets: [{ data: values, backgroundColor: ['#7c3aed', '#2563eb', '#06b6d4', '#a78bfa', '#60a5fa', '#22d3ee', '#8b5cf6', '#3b82f6'], borderColor: '#0f0f1a', borderWidth: 3 }] },
+                        options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
+                    });
+                } catch (e) { }
+            }
+
+            loadAll();
+            loadCharts();
+        }
+    </script>
+</body>
+
+</html>

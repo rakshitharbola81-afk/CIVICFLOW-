@@ -52,6 +52,18 @@ const complaintSchema = new mongoose.Schema(
             afterUrl:String,
             afterPublicId:String
         },
+        status: {
+            type: String,
+            enum: [
+                "Pending",
+                "Assigned",
+                "In Progress",
+                "Verification Pending",
+                "Resolved",
+                "Closed"
+            ],
+            default: "Pending"
+        },
         workNotes:{
             type:String,
             trim:true

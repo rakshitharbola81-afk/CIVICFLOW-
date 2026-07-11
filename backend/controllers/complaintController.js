@@ -63,8 +63,10 @@ exports.createComplaint=catchAsync(async(req,res,next)=>{
 });
 
 exports.assignWorker = catchAsync(async (req, res, next) => {
+    console.log("BODY =>", req.body);
     const { complaintId, workerId } = req.body;
-
+    console.log("Complaint ID =>", complaintId);
+    console.log("Worker ID =>", workerId);
     const complaint = await Complaint.findById(complaintId);
     if (!complaint) return next(new AppError('No complaint found with that ID.', 404));
 
@@ -81,9 +83,11 @@ exports.assignWorker = catchAsync(async (req, res, next) => {
         complaintId: complaintId,
         performedBy: req.user._id,
         action: 'STATUS_CHANGE',
-        fromStatus: 'Pending',
-        toStatus: 'Assigned',
-        comment: `Complaint successfully assigned to Worker ID: ${workerId} by Admin.`
+        changes: {
+            from: 'Pending',
+            to: 'Assigned'
+        },
+        notes: `Complaint successfully assigned to Worker ID: ${workerId} by Admin.`
     });
 
     res.status(200).json({
@@ -108,9 +112,11 @@ exports.markInProgress=catchAsync(async(req,res,next)=>{
         complaintId: complaint._id,
         performedBy: req.user._id,
         action: 'STATUS_CHANGE',
-        fromStatus: previousStatus,
-        toStatus: 'In Progress',
-        comment: `Worker ${req.user.name} has started working on this complaint.`
+        changes: {
+            from: previousStatus,
+            to: 'In Progress'
+        },
+        notes: `Worker ${req.user.name} has started working on this complaint.`
     });
     res.status(200).json({
         status: 'success',
@@ -136,17 +142,18 @@ exports.resolveComplaint=catchAsync(async(req,res,next)=>{
     const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
     complaint.images.afterUrl = cloudinaryResult.url;
     complaint.images.afterPublicId = cloudinaryResult.publicId;
-    complaint.status = 'Resolved';
-    complaint.resolvedAt = new Date();
+    complaint.status = "Verification Pending";
     complaint.workNotes = req.body.workNotes || '';
     await complaint.save();
     await AuditLog.create({
         complaintId: complaint._id,
         performedBy: req.user._id,
         action: 'STATUS_CHANGE',
-        fromStatus: 'In Progress',
-        toStatus: 'Resolved',
-        comment: req.body.workNotes || `Complaint resolved by Worker ${req.user.name}.`
+        changes: {
+            from: 'In Progress',
+            to: 'Resolved'
+        },
+        notes: req.body.workNotes || `Complaint resolved by Worker ${req.user.name}.`
     });
     res.status(200).json({
         status: 'success',
@@ -154,3 +161,71 @@ exports.resolveComplaint=catchAsync(async(req,res,next)=>{
         data: { complaint }
     });
 })
+exports.approveComplaint = catchAsync(async (req, res, next) => {
+
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint)
+        return next(new AppError("Complaint not found", 404));
+
+    complaint.status = "Resolved";
+    complaint.resolvedAt = new Date();
+
+    await complaint.save();
+
+    res.status(200).json({
+        status: "success",
+        message: "Complaint approved successfully.",
+        data: { complaint }
+    });
+
+});
+exports.rejectComplaint = catchAsync(async (req, res, next) => {
+
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint)
+        return next(new AppError("Complaint not found", 404));
+
+    complaint.status = "In Progress";
+
+    await complaint.save();
+
+    res.status(200).json({
+        status: "success",
+        message: "Complaint rejected.",
+        data: { complaint }
+    });
+
+});
+exports.getMyComplaints = catchAsync(async (req, res, next) => {
+    const complaints = await Complaint.find({ citizen: req.user._id })
+        .sort({ createdAt: -1 });
+    res.status(200).json({
+        status: 'success',
+        results: complaints.length,
+        data: { complaints }
+    });
+});
+exports.getAllComplaints = catchAsync(async (req, res, next) => {
+    const complaints = await Complaint.find()
+        .populate('citizen', 'name email')
+        .populate('assignedWorker', 'name email')
+        .sort({ createdAt: -1 });
+    res.status(200).json({
+        status: 'success',
+        results: complaints.length,
+        data: { complaints }
+    });
+});
+exports.getMyAssignedComplaints = catchAsync(async (req, res, next) => {
+    console.log("Logged in Worker ID:", req.user._id.toString());
+    const complaints = await Complaint.find({ assignedWorker: req.user._id })
+        .sort({ createdAt: -1 });
+    console.log("Found Complaints:", complaints);
+    res.status(200).json({
+        status: 'success',
+        results: complaints.length,
+        data: { complaints }
+    });
+});

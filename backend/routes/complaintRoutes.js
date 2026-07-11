@@ -30,4 +30,35 @@ router.patch(
     uploadImage.single('afterImage'),
     complaintController.resolveComplaint
 );
+router.get(
+    '/complaints',
+    protect,
+    restrictTo('citizen'),
+    complaintController.getMyComplaints
+);
+router.get(
+    '/all',
+    protect,
+    restrictTo('admin'),
+    complaintController.getAllComplaints
+);
+router.get(
+    '/assigned',
+    protect,
+    restrictTo('worker'),
+    complaintController.getMyAssignedComplaints
+);
+router.patch(
+    '/:id/approve',
+    protect,
+    restrictTo('admin'),
+    complaintController.approveComplaint
+);
+
+router.patch(
+    '/:id/reject',
+    protect,
+    restrictTo('admin'),
+    complaintController.rejectComplaint
+);
 module.exports=router;

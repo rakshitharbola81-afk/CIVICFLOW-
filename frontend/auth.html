@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in · CivicFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="shared.js"></script>
+    <style>
+        @keyframes gradient-shift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .animated-bg {
+            background: linear-gradient(-45deg, #0f0f1a, #1a1a2e, #1e1b4b, #082f49, #0f0f1a);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen animated-bg relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none">
+        <div class="orb w-[400px] h-[400px] bg-violet-600 top-[-100px] left-[10%] animate-float"></div>
+        <div class="orb w-[400px] h-[400px] bg-cyan-500 bottom-[-100px] right-[10%] animate-float"
+            style="animation-delay:-3s"></div>
+        <div class="orb w-[300px] h-[300px] bg-blue-600 top-[30%] right-[30%] animate-float"
+            style="animation-delay:-1.5s"></div>
+    </div>
+
+    <div class="relative min-h-screen flex items-center justify-center p-6">
+        <div class="glass-strong rounded-3xl p-8 w-full max-w-md animate-fade-up">
+            <a href="index.html" class="flex items-center gap-2 mb-6">
+                <div class="w-9 h-9 rounded-lg grad-btn flex items-center justify-center font-bold">C</div>
+                <span class="font-bold text-lg">CivicFlow</span>
+            </a>
+
+            <div class="flex glass-card p-1 rounded-xl mb-6">
+                <button id="tab-login" class="flex-1 py-2 rounded-lg text-sm font-semibold transition">Login</button>
+                <button id="tab-register"
+                    class="flex-1 py-2 rounded-lg text-sm font-semibold transition">Register</button>
+            </div>
+
+            <!-- Login form -->
+            <form id="login-form" class="space-y-4">
+                <h2 class="text-2xl font-bold">Welcome back</h2>
+                <p class="text-white/60 text-sm -mt-2">Sign in to your CivicFlow account.</p>
+                <div>
+                    <label class="text-xs uppercase tracking-wider text-white/60">Email</label>
+                    <input type="email" name="email" required placeholder="you@city.gov" class="mt-1" />
+                </div>
+                <div>
+                    <label class="text-xs uppercase tracking-wider text-white/60">Password</label>
+                    <input type="password" name="password" required placeholder="••••••••" class="mt-1" />
+                </div>
+                <button type="submit" id="login-btn" class="grad-btn w-full py-3 rounded-xl font-semibold">Sign
+                    in</button>
+            </form>
+
+            <!-- Register form -->
+            <form id="register-form" class="space-y-4 hidden">
+                <h2 class="text-2xl font-bold">Create account</h2>
+                <p class="text-white/60 text-sm -mt-2">Join CivicFlow in seconds.</p>
+                <div>
+                    <label class="text-xs uppercase tracking-wider text-white/60">Full name</label>
+                    <input type="text" name="name" required placeholder="Jane Doe" class="mt-1" />
+                </div>
+                <div>
+                    <label class="text-xs uppercase tracking-wider text-white/60">Email</label>
+                    <input type="email" name="email" required placeholder="you@city.gov" class="mt-1" />
+                </div>
+                <div>
+                    <label class="text-xs uppercase tracking-wider text-white/60">Password</label>
+                    <input type="password" name="password" required minlength="6" placeholder="At least 6 characters"
+                        class="mt-1" />
+                </div>
+                <div>
+                    <label class="text-xs uppercase tracking-wider text-white/60">Role</label>
+                    <select name="role" required class="mt-1">
+                        <option value="citizen">Citizen</option>
+                        <option value="worker">Worker</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" id="register-btn" class="grad-btn w-full py-3 rounded-xl font-semibold">Create
+                    account</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+
+        function setMode(mode) {
+            const isLogin = mode === 'login';
+            loginForm.classList.toggle('hidden', !isLogin);
+            registerForm.classList.toggle('hidden', isLogin);
+            tabLogin.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition ' + (isLogin ? 'grad-btn text-white' : 'text-white/60 hover:text-white');
+            tabRegister.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition ' + (!isLogin ? 'grad-btn text-white' : 'text-white/60 hover:text-white');
+        }
+        tabLogin.onclick = () => setMode('login');
+        tabRegister.onclick = () => setMode('register');
+
+        const params = new URLSearchParams(location.search);
+        setMode(params.get('mode') === 'register' ? 'register' : 'login');
+
+        function redirectByRole(role) {
+            if (role === 'admin') location.href = 'admin-dashboard.html';
+            else if (role === 'worker') location.href = 'worker-dashboard.html';
+            else location.href = 'citizen-dashboard.html';
+        }
+
+        function persistAuth(data) {
+            const token = data.token || data.accessToken || (data.data && (data.data.token || data.data.accessToken));
+            const user = data.user || (data.data && data.data.user) || {};
+            const role = user.role || data.role || (data.data && data.data.role);
+            const name = user.name || data.name || (data.data && data.data.name) || '';
+            if (!token) throw new Error('No token in response');
+            localStorage.setItem('civicflow_token', token);
+            localStorage.setItem('civicflow_role', role || 'citizen');
+            localStorage.setItem('civicflow_user', name);
+            return role || 'citizen';
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = spinner() + ' Signing in...';
+            try {
+                const fd = new FormData(loginForm);
+                const data = await apiFetch('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+                });
+                const role = persistAuth(data);
+                toast('Welcome back!', 'success');
+                setTimeout(() => redirectByRole(role), 500);
+            } catch (err) {
+                toast(err.message || 'Login failed', 'error');
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('register-btn');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = spinner() + ' Creating...';
+            try {
+                const fd = new FormData(registerForm);
+                const payload = {
+                    name: fd.get('name'), email: fd.get('email'),
+                    password: fd.get('password'), role: fd.get('role'),
+                };
+                const data = await apiFetch('/auth/register', {
+                    method: 'POST', body: JSON.stringify(payload),
+                });
+                let role;
+                try { role = persistAuth(data); }
+                catch {
+                    toast('Account created. Please sign in.', 'success');
+                    setMode('login'); btn.disabled = false; btn.innerHTML = orig; return;
+                }
+                toast('Account created!', 'success');
+                setTimeout(() => redirectByRole(role), 500);
+            } catch (err) {
+                toast(err.message || 'Registration failed', 'error');
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        });
+    </script>
+</body>
+
+</html>

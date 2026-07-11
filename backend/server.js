@@ -1,6 +1,8 @@
 const dotenv = require('dotenv');
 dotenv.config({ path: './.env' });
 const express = require('express');
+const cors = require('cors');
+
 const http = require('http');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db.js');
@@ -9,17 +11,20 @@ const globalErrorHandler = require('./middleware/errorMiddleware.js');
 const authRouter = require('./routes/authRoutes.js');
 const complaintRouter = require('./routes/complaintRoutes.js');
 const analyticsRouter = require('./routes/analyticsRoutes.js');
+const userRouter = require("./routes/userRoutes.js");
 const mongoose=require('mongoose');
 connectDB();
 const app = express();
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser()); 
+app.use(cors());
 app.get('/api/v1/health', (req, res) => {
     res.status(200).json({ status: 'Success', message: 'CivicFlow API operational' });
 });
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/complaints', complaintRouter);
 app.use('/api/v1/analytics', analyticsRouter); 
+app.use("/api/v1/users", userRouter);
 app.all('*', (req, res, next) => {
     next(new AppError(`Cant find ${req.originalUrl} on this server`, 404));
 });
