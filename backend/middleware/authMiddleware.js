@@ -16,9 +16,15 @@ exports.protect=catchAsync(async(req,res,next)=>{
 
     }
     const decoded=jwt.verify(token,process.env.JWT_SECRET);
-    const currentUser=await  User.findById(decoded.id);
+    const currentUser = await User.findById(decoded.id).select("+isActive");
+
     if(!currentUser){
         return next(new AppError('The user belonging to this token no longer exists.',400));
+    }
+    if (!currentUser.isActive) {
+        return next(
+            new AppError("Your account has been disabled. Please contact the administrator.", 403)
+        );
     }
     req.user=currentUser;
     next();

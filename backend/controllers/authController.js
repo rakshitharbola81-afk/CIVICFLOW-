@@ -4,7 +4,7 @@ const AppError=require('../utils/appError');
 const sendTokenResponse=require('../utils/jwtToken');
 
 exports.signup=catchAsync(async(req,res,next)=>{
-    const {name,email,password,phoneNumber,role}=req.body;
+    const {name,email,password,phoneNumber}=req.body;
 
     const existingUser=await User.findOne({email});
     if(existingUser){
@@ -15,7 +15,7 @@ exports.signup=catchAsync(async(req,res,next)=>{
         email,
         password,
         phoneNumber,
-        role
+        role:"citizen"
     })
     sendTokenResponse(newUser, 201, res);
 });
