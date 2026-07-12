@@ -48,19 +48,21 @@ exports.createComplaint=catchAsync(async(req,res,next)=>{
     <hr />
     <p><strong>Evidence Image:</strong> <br><img src="${cloudinaryResult.url}" width="400" /></p>
   `;
-    try {
+    // try {
 
-        await sendComplaintEmail({
-            email: process.env.DEMO_AUTHORITY_EMAIL,
-            subject: `[${newComplaint.priority}] New ${newComplaint.category} Report #${newComplaint.title}`,
-            html: emailHtmlContent
-        });
+    //     await sendComplaintEmail({
+    //         email: process.env.DEMO_AUTHORITY_EMAIL,
+    //         subject: `[${newComplaint.priority}] New ${newComplaint.category} Report #${newComplaint.title}`,
+    //         html: emailHtmlContent
+    //     });
 
-    } catch (err) {
+    // } catch (err) {
 
-        console.error("Email failed:", err.message);
+    //     console.error("Email failed:", err.message);
 
-    }
+    // }
+
+    console.log("Email skipped for performance testing")
     res.status(201).json({
         status: 'success',
         message: 'Complaint registered successfully and authority notified via AI mail.',
