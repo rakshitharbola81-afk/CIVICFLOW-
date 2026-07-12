@@ -18,6 +18,12 @@ const app = express();
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser()); 
 app.use(cors());
+app.get("/", (req, res) => {
+    res.status(200).json({
+        status: "success",
+        message: "CivicFlow API is running successfully!"
+    });
+});
 app.get('/api/v1/health', (req, res) => {
     res.status(200).json({ status: 'Success', message: 'CivicFlow API operational' });
 });
