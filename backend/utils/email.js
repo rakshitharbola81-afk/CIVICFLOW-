@@ -1,19 +1,14 @@
-const nodemailer=require('nodemailer');
-exports.sendComplaintEmail=async(options)=>{
-    const transporter=nodemailer.createTransport({
-        host:process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port:process.env.EMAIL_PORT || 587,
-        secure:false,
-        auth:{
-            user:process.env.EMAIL_USER,
-            pass:process.env.EMAIL_PASS,
-        }
-    });
-    const mailOptions ={
-        from:`"CivicFlow AI System" <${process.env.EMAIL_USER}>`,
-        to:options.EMAIL_USER,
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+exports.sendComplaintEmail = async (options) => {
+    const data = await resend.emails.send({
+        from: "CivicFlow <onboarding@resend.dev>",
+        to: options.email,
         subject: options.subject,
-        html : options.html
-    }
-    await transporter.sendMail(mailOptions);
-}
+        html: options.html,
+    });
+
+    console.log("Resend Email:", data);
+};

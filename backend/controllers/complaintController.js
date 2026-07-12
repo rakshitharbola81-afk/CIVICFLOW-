@@ -1,7 +1,7 @@
 const Complaint = require('../models/Complaint');
 const {uploadToCloudinary}=require('../config/cloudinaryConfig');
 const {analyzeComplaintImage}=require('../utils/groqClient');
-const {sendComplaintEmail}=require('../utils/email');
+const { sendComplaintEmail } = require("../utils/email");
 const catchAsync=require('../utils/catchAsync');
 const AppError=require('../utils/appError');
 const AuditLog=require('../models/AuditLog');
@@ -48,27 +48,19 @@ exports.createComplaint=catchAsync(async(req,res,next)=>{
     <hr />
     <p><strong>Evidence Image:</strong> <br><img src="${cloudinaryResult.url}" width="400" /></p>
   `;
-    // try {
-
-    //     await sendComplaintEmail({
-    //         email: process.env.DEMO_AUTHORITY_EMAIL,
-    //         subject: `[${newComplaint.priority}] New ${newComplaint.category} Report #${newComplaint.title}`,
-    //         html: emailHtmlContent
-    //     });
-
-    // } catch (err) {
-
-    //     console.error("Email failed:", err.message);
-
-    // }
-
-    console.log("Email skipped for performance testing")
     res.status(201).json({
         status: 'success',
         message: 'Complaint registered successfully and authority notified via AI mail.',
         data: {
             complaint: newComplaint
         }
+    });
+    sendComplaintEmail({
+        email: process.env.IO_AUTHORITY_EMAIL,
+        subject: `[${newComplaint.priority}] New ${newComplaint.category} Report #${newComplaint.title}`,
+        html: emailHtmlContent
+    }).catch(err => {
+        console.error("Resend Error:", err);
     });
 });
 
