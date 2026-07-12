@@ -11,7 +11,7 @@ exports.sendComplaintEmail=async(options)=>{
     });
     const mailOptions ={
         from:`"CivicFlow AI System" <${process.env.EMAIL_USER}>`,
-        to:"harbolarakshit@gmail.com",
+        to:options.EMAIL_USER,
         subject: options.subject,
         html : options.html
     }
