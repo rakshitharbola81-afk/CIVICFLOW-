@@ -7,7 +7,7 @@ exports.analyzeComplaintImage=async(imageUrl,userDescription)=>{
     1. "category": Must be exactly one of these: "Pothole", "Garbage Overflow", "Water Leakage", "Broken Street Light", "Road Damage", or "Other".
     2. "priority": Must be exactly one of these: "Low", "Medium", "High", or "Urgent".
     3. "analysis": A highly professional, objective technical description of the issue in English for database records.
-    4. "emailBody": A formal, complete, professional official email draft in English addressed to the municipal department head reporting this issue. Include placeholders like [Location] and [Complaint ID] where appropriate. Do not include subject line inside the body.
+    4. "emailBody": Generate a professional email using the actual complaint details. Use the real location, category, priority, and description from the input. Only keep [Complaint ID] as a placeholder if it is not available yet.
     
     CRITICAL: The entire response must be in English. Do not include any conversational text outside the JSON block.
     `
