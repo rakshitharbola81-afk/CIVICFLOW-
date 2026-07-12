@@ -38,7 +38,7 @@ exports.getAllWorkers = catchAsync(async (req, res, next) => {
 
     const workers = await User.find({
         role: "worker"
-    }).select("-password");
+    }).select("-password +isActive");
 
     res.status(200).json({
         status: "success",
@@ -98,6 +98,24 @@ exports.disableWorker = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: "success",
         message: "Worker disabled successfully."
+    });
+
+});
+exports.enableWorker = catchAsync(async (req, res, next) => {
+
+    const worker = await User.findById(req.params.id);
+
+    if (!worker) {
+        return next(new AppError("Worker not found.", 404));
+    }
+
+    worker.isActive = true;
+
+    await worker.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+        status: "success",
+        message: "Worker enabled successfully."
     });
 
 });

@@ -151,7 +151,7 @@ exports.resolveComplaint=catchAsync(async(req,res,next)=>{
         action: 'STATUS_CHANGE',
         changes: {
             from: 'In Progress',
-            to: 'Resolved'
+            to: 'Verification Pending'
         },
         notes: req.body.workNotes || `Complaint resolved by Worker ${req.user.name}.`
     });
@@ -165,18 +165,33 @@ exports.approveComplaint = catchAsync(async (req, res, next) => {
 
     const complaint = await Complaint.findById(req.params.id);
 
-    if (!complaint)
-        return next(new AppError("Complaint not found", 404));
+    if (!complaint) {
+        return next(new AppError("Complaint not found.", 404));
+    }
+
+    if (complaint.status !== "Verification Pending") {
+        return next(new AppError("Complaint is not awaiting verification.", 400));
+    }
 
     complaint.status = "Resolved";
     complaint.resolvedAt = new Date();
 
     await complaint.save();
 
+    await AuditLog.create({
+        complaintId: complaint._id,
+        performedBy: req.user._id,
+        action: "STATUS_CHANGE",
+        changes: {
+            from: "Verification Pending",
+            to: "Resolved"
+        },
+        notes: "Approved by Admin."
+    });
+
     res.status(200).json({
         status: "success",
-        message: "Complaint approved successfully.",
-        data: { complaint }
+        message: "Complaint approved successfully."
     });
 
 });
@@ -184,17 +199,34 @@ exports.rejectComplaint = catchAsync(async (req, res, next) => {
 
     const complaint = await Complaint.findById(req.params.id);
 
-    if (!complaint)
-        return next(new AppError("Complaint not found", 404));
+    if (!complaint) {
+        return next(new AppError("Complaint not found.", 404));
+    }
+
+    if (complaint.status !== "Verification Pending") {
+        return next(
+            new AppError("Complaint is not awaiting verification.", 400)
+        );
+    }
 
     complaint.status = "In Progress";
 
     await complaint.save();
 
+    await AuditLog.create({
+        complaintId: complaint._id,
+        performedBy: req.user._id,
+        action: "STATUS_CHANGE",
+        changes: {
+            from: "Verification Pending",
+            to: "In Progress"
+        },
+        notes: "Work rejected by Admin. Worker needs to fix the issue."
+    });
+
     res.status(200).json({
         status: "success",
-        message: "Complaint rejected.",
-        data: { complaint }
+        message: "Complaint rejected and sent back to worker."
     });
 
 });

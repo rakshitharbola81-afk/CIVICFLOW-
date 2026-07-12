@@ -23,6 +23,10 @@ router.patch(
     userController.disableWorker
 );
 router.patch(
+    "/:id/enable",
+    userController.enableWorker
+);
+router.patch(
     '/:id',
     protect,
     restrictTo('admin'),
