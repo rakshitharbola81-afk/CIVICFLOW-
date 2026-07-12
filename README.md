@@ -5,6 +5,12 @@ CivicFlow is a full-stack complaint management platform that streamlines communi
 ---
 
 ## 🚀 Features
+- AI-powered complaint analysis
+- Cloudinary image uploads
+- Role-based dashboards
+- Complaint verification workflow
+- Email notifications via Resend
+- Live deployment on Vercel + Render
 
 ### 👤 Citizen
 - Register & Login using JWT Authentication
