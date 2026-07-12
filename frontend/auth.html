@@ -83,14 +83,6 @@
                     <input type="password" name="password" required minlength="6" placeholder="At least 6 characters"
                         class="mt-1" />
                 </div>
-                <div>
-                    <label class="text-xs uppercase tracking-wider text-white/60">Role</label>
-                    <select name="role" required class="mt-1">
-                        <option value="citizen">Citizen</option>
-                        <option value="worker">Worker</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
                 <button type="submit" id="register-btn" class="grad-btn w-full py-3 rounded-xl font-semibold">Create
                     account</button>
             </form>
@@ -162,8 +154,9 @@
             try {
                 const fd = new FormData(registerForm);
                 const payload = {
-                    name: fd.get('name'), email: fd.get('email'),
-                    password: fd.get('password'), role: fd.get('role'),
+                    name: fd.get('name'), 
+                    email: fd.get('email'),
+                    password: fd.get('password')
                 };
                 const data = await apiFetch('/auth/register', {
                     method: 'POST', body: JSON.stringify(payload),

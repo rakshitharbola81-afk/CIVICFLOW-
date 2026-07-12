@@ -28,6 +28,9 @@
                     Complaints</a>
                 <a href="#analytics" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5">📈
                     Analytics</a>
+                <a href="#workers" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5">
+                    👷 Workers
+                </a>
             </nav>
             <div class="mt-auto space-y-3">
                 <div class="glass-card p-3">
@@ -106,7 +109,36 @@
                     </table>
                 </div>
             </section>
-
+            <section id="workers" class="glass-card p-6">            
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-xl font-semibold">Manage Workers</h2>            
+                    <button id="create-worker-btn" class="grad-btn px-4 py-2 rounded-xl text-sm font-semibold">            
+                        + Create Worker            
+                    </button>
+                </div>            
+                <div class="overflow-x-auto">            
+                    <table class="w-full text-sm">            
+                        <thead class="text-white/50 uppercase text-xs">            
+                            <tr>            
+                                <th class="py-3 text-left">Name</th>
+                                <th class="py-3 text-left">Email</th>            
+                                <th class="py-3 text-left">Phone</th>            
+                                <th class="py-3 text-left">Status</th>            
+                                <th class="py-3 text-right">Actions</th>            
+                            </tr>            
+                        </thead>            
+                        <tbody id="workers-body">            
+                            <tr>            
+                                <td colspan="5" class="py-8 text-center text-white/50">            
+                                    Loading workers...
+            
+                                </td>            
+                            </tr>            
+                        </tbody>            
+                    </table>            
+                </div>            
+            </section>
+            
             <!-- Analytics -->
             <section id="analytics" class="grid lg:grid-cols-2 gap-4">
                 <div class="glass-card p-6">
@@ -144,6 +176,167 @@
             </form>
         </div>
     </div>
+    <div id="worker-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/60 backdrop-blur-sm">    
+        <div class="glass-strong rounded-2xl p-6 w-full max-w-md animate-pop">    
+            <h3 class="text-xl font-bold">Create Worker</h3>    
+            <p class="text-white/60 text-sm">Create a new worker account.
+            </p>    
+            <form id="worker-form" class="mt-4 space-y-4">    
+                <div>
+                    <label class="text-xs uppercase text-white/60">Name
+                    </label>    
+                    <input type="text" name="name" required class="mt-1 w-full" />
+                </div>    
+                <div>
+                    <label class="text-xs uppercase text-white/60">
+                        Email
+                    </label>    
+                    <input type="email" name="email" required class="mt-1 w-full" />
+                </div>    
+                <div>
+                    <label class="text-xs uppercase text-white/60">
+                        Password
+                    </label>    
+                    <input type="password" name="password" required class="mt-1 w-full" />
+                </div>
+    
+                <div>
+                    <label class="text-xs uppercase text-white/60">
+                        Phone Number
+                    </label>    
+                    <input type="text" name="phoneNumber" class="mt-1 w-full" />
+                </div>    
+                <div class="flex justify-end gap-2">    
+                    <button type="button" onclick="closeWorkerModal()" class="px-4 py-2 rounded-xl glass-card">    
+                        Cancel    
+                    </button>    
+                    <button id="create-worker-submit" class="grad-btn px-4 py-2 rounded-xl">    
+                        Create Worker    
+                    </button>    
+                </div>    
+            </form>    
+        </div>    
+    </div>
+    <!-- Verification Modal -->
+    <div id="verification-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+    
+        <div class="glass-strong rounded-2xl p-6 w-full max-w-4xl animate-pop">
+    
+            <h3 class="text-2xl font-bold">
+                Complaint Verification
+            </h3>
+    
+            <div class="grid md:grid-cols-2 gap-6 mt-5">
+    
+                <div>
+    
+                    <h4 class="font-semibold mb-2">
+                        Before Image
+                    </h4>
+    
+                    <img id="verify-before-image" class="rounded-xl w-full h-72 object-cover border border-white/10">
+    
+                </div>
+    
+                <div>
+    
+                    <h4 class="font-semibold mb-2">
+                        After Image
+                    </h4>
+    
+                    <img id="verify-after-image" class="rounded-xl w-full h-72 object-cover border border-white/10">
+    
+                </div>
+    
+            </div>
+    
+            <div class="mt-5">
+    
+                <h4 class="font-semibold">
+                    Work Notes
+                </h4>
+    
+                <p id="verify-notes" class="text-white/70 mt-2">
+                </p>
+    
+            </div>
+    
+            <div class="flex justify-end gap-3 mt-6">
+    
+                <button onclick="closeVerificationModal()" class="glass-card px-4 py-2 rounded-xl">
+    
+                    Close
+    
+                </button>
+    
+                <button id="approve-btn" class="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-xl">
+    
+                    Approve
+    
+                </button>
+    
+                <button id="reject-btn" class="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-xl">
+    
+                    Reject
+    
+                </button>
+    
+            </div>
+    
+        </div>
+    
+    </div>
+    <!-- Edit Worker Modal -->
+    <div id="edit-worker-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+    
+        <div class="glass-strong rounded-2xl p-6 w-full max-w-md animate-pop">
+    
+            <h3 class="text-xl font-bold">
+                Edit Worker
+            </h3>
+    
+            <form id="edit-worker-form" class="mt-4 space-y-4">
+    
+                <div>
+                    <label>Name</label>
+                    <input type="text" name="name" required class="mt-1 w-full">
+                </div>
+    
+                <div>
+                    <label>Email</label>
+                    <input type="email" name="email" required class="mt-1 w-full">
+                </div>
+    
+                <div>
+                    <label>Phone Number</label>
+                    <input type="text" name="phoneNumber" class="mt-1 w-full">
+                </div>
+    
+                <div class="flex justify-end gap-2">
+    
+                    <button type="button"
+                        onclick="document.getElementById('edit-worker-modal').classList.add('hidden');document.getElementById('edit-worker-modal').classList.remove('flex');"
+                        class="glass-card px-4 py-2 rounded-xl">
+    
+                        Cancel
+    
+                    </button>
+    
+                    <button id="edit-worker-submit" type="submit" class="grad-btn px-4 py-2 rounded-xl">
+    
+                        Save Changes
+    
+                    </button>
+    
+                </div>
+    
+            </form>
+    
+        </div>
+    
+    </div>
 
     <script>
         if (requireAuth(['admin'])) {
@@ -162,6 +355,14 @@
             window.closeAssign = () => {
                 const m = document.getElementById('assign-modal');
                 m.classList.add('hidden'); m.classList.remove('flex');
+            };
+            window.closeWorkerModal = () => {
+
+                const modal = document.getElementById("worker-modal");
+
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+
             };
 
             document.getElementById('assign-form').addEventListener('submit', async (e) => {
@@ -210,14 +411,15 @@ Assign
 
 ${c.status === "Verification Pending"
                         ? `
-<button onclick="approveComplaint('${c._id}')" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg text-xs mr-2">
-Approve
-</button>
+<button
+onclick="openVerificationModal('${c._id}')"
+class="bg-cyan-600 hover:bg-cyan-700 px-3 py-1 rounded-lg text-xs">
 
-<button onclick="rejectComplaint('${c._id}')" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg text-xs">
-Reject
+Review
+
 </button>
-` : ''}
+`
+                        : ''}
 
 </td>
       </tr>`).join('');
@@ -261,6 +463,151 @@ Reject
 
             }
             window.openAssign = openAssign;
+            window.openEditWorker = (id) => {
+
+                const worker = allWorkers.find(w => w._id === id);
+
+                if (!worker) return;
+
+                const form = document.getElementById("edit-worker-form");
+
+                form.dataset.id = id;
+
+                form.name.value = worker.name;
+
+                form.email.value = worker.email;
+
+                form.phoneNumber.value = worker.phoneNumber || "";
+
+                document.getElementById("edit-worker-modal").classList.remove("hidden");
+                document.getElementById("edit-worker-modal").classList.add("flex");
+
+            };
+            window.openVerificationModal = (id) => {
+
+                const complaint = allComplaints.find(c => c._id === id);
+
+                if (!complaint) return;
+
+                document.getElementById("verify-before-image").src =
+                    complaint.images?.beforeUrl || "";
+
+                document.getElementById("verify-after-image").src =
+                    complaint.images?.afterUrl || "";
+
+                document.getElementById("verify-notes").textContent =
+                    complaint.workNotes || "No notes provided.";
+
+                document.getElementById("approve-btn").dataset.id = id;
+
+                document.getElementById("reject-btn").dataset.id = id;
+
+                const modal = document.getElementById("verification-modal");
+
+                modal.classList.remove("hidden");
+
+                modal.classList.add("flex");
+
+            }; 
+            window.closeVerificationModal = () => {
+
+                const modal = document.getElementById("verification-modal");
+
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+
+            };
+            document.getElementById("approve-btn").onclick = async function () {
+
+                const id = this.dataset.id;
+
+                try {
+
+                    await apiFetch(`/complaints/${id}/approve`, {
+                        method: "PATCH"
+                    });
+
+                    toast("Complaint approved successfully", "success");
+
+                    closeVerificationModal();
+
+                    loadAll();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                }
+
+            };
+            document.getElementById("reject-btn").onclick = async function () {
+
+                const id = this.dataset.id;
+
+                try {
+
+                    await apiFetch(`/complaints/${id}/reject`, {
+                        method: "PATCH"
+                    });
+
+                    toast("Complaint rejected", "success");
+
+                    closeVerificationModal();
+
+                    loadAll();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                }
+            }
+            window.disableWorker = async (id) => {
+
+                const confirmDisable = confirm(
+                    "Are you sure you want to disable this worker?"
+                );
+
+                if (!confirmDisable) return;
+
+                try {
+
+                    await apiFetch(`/users/${id}/disable`, {
+                        method: "PATCH"
+                    });
+
+                    toast("Worker disabled successfully", "success");
+
+                    await loadWorkers();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                }
+
+            };
+            window.enableWorker = async (id) => {
+
+                if (!confirm("Enable this worker?")) return;
+
+                try {
+
+                    await apiFetch(`/users/${id}/enable`, {
+                        method: "PATCH"
+                    });
+
+                    toast("Worker enabled successfully", "success");
+
+                    await loadWorkers();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                }
+
+            };
 
             async function loadAll() {
                 try {
@@ -282,29 +629,205 @@ Reject
                 const cats = [...new Set(allComplaints.map(c => c.category).filter(Boolean))];
                 document.getElementById('filter-category').innerHTML = '<option value="">All categories</option>' + cats.map(c => `<option>${c}</option>`).join('');
 
-                try {
-                    const w = await apiFetch('/users/workers');
-
-                    console.log("Workers API Response:", w);
-
-                    allWorkers = Array.isArray(w)
-                        ? w
-                        : (w.data?.workers || []);
-
-                    console.log("Parsed Workers:", allWorkers);
-
-                } catch (err) {
-                    console.error(err);
-                    allWorkers = [];
-                }
-                document.getElementById('stat-workers').textContent = allWorkers.length;
+                
 
                 renderTable();
+            }
+            async function loadWorkers() {
+
+                try {
+
+                    const res = await apiFetch('/users/workers');
+
+                    allWorkers = Array.isArray(res)
+                        ? res
+                        : (res.data?.workers || []);
+
+                    document.getElementById("stat-workers").textContent = allWorkers.length;
+
+                    console.log(allWorkers);
+                    renderWorkers();
+
+                } catch (err) {
+
+                    console.error(err);
+
+                    toast("Could not load workers", "error");
+
+                }
+                function renderWorkers() {
+
+                    const body = document.getElementById("workers-body");
+
+                    if (!allWorkers.length) {
+                        body.innerHTML = `
+        <tr>
+            <td colspan="5" class="py-6 text-center text-white/50">
+                No workers found
+            </td>
+        </tr>`;
+                        return;
+                    }
+
+                    body.innerHTML = allWorkers.map(worker => `
+        <tr class="border-t border-white/5">
+            <td class="py-3">${worker.name}</td>
+            <td>${worker.email}</td>
+            <td>${worker.phoneNumber || "-"}</td>
+            <td>
+                ${worker.isActive
+                            ? '<span class="text-green-400">Active</span>'
+                            : '<span class="text-red-400">Disabled</span>'}
+            </td>
+            <td class="text-right">
+                <button onclick="openEditWorker('${worker._id}')"
+class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-xs mr-2">
+
+Edit
+
+</button>
+
+${worker.isActive
+                            ? `
+<button
+onclick="disableWorker('${worker._id}')"
+class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg text-xs">
+
+Disable
+
+</button>
+`
+                            : `
+<button
+onclick="enableWorker('${worker._id}')"
+class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg text-xs">
+
+Enable
+
+</button>
+`
+}
+            </td>
+        </tr>
+    `).join("");
+
+                }
+
+
             }
 
             document.getElementById('filter-status').onchange = renderTable;
             document.getElementById('filter-category').onchange = renderTable;
+            document.getElementById("create-worker-btn").onclick = () => {
 
+                const modal = document.getElementById("worker-modal");
+
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+
+            };
+
+            window.closeWorkerModal = () => {
+
+                const modal = document.getElementById("worker-modal");
+
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+
+            };
+            document.getElementById("worker-form").addEventListener("submit", async (e) => {
+
+                e.preventDefault();
+
+                const form = e.target;
+
+                const btn = document.getElementById("create-worker-submit");
+
+                const original = btn.innerHTML;
+
+                btn.disabled = true;
+                btn.innerHTML = spinner() + " Creating...";
+
+                try {
+
+                    await apiFetch("/users/create-worker", {
+                        method: "POST",
+                        body: JSON.stringify({
+                            name: form.name.value,
+                            email: form.email.value,
+                            password: form.password.value,
+                            phoneNumber: form.phoneNumber.value
+                        })
+                    });
+
+                    toast("Worker created successfully", "success");
+
+                    form.reset();
+
+                    closeWorkerModal();
+
+                    await loadWorkers();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                } finally {
+
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+
+                }
+
+            });
+            document.getElementById("edit-worker-form").addEventListener("submit", async (e) => {
+
+                e.preventDefault();
+
+                const form = e.target;
+
+                const id = form.dataset.id;
+
+                const btn = document.getElementById("edit-worker-submit");
+
+                const original = btn.innerHTML;
+
+                btn.disabled = true;
+                btn.innerHTML = spinner() + " Saving...";
+
+                try {
+
+                    await apiFetch(`/users/${id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({
+                            name: form.name.value,
+                            email: form.email.value,
+                            phoneNumber: form.phoneNumber.value
+                        })
+                    });
+
+                    toast("Worker updated successfully", "success");
+
+                    form.reset();
+
+                    document.getElementById("edit-worker-modal").classList.add("hidden");
+                    document.getElementById("edit-worker-modal").classList.remove("flex");
+
+                    await loadWorkers();
+
+                } catch (err) {
+
+                    toast(err.message, "error");
+
+                } finally {
+
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+
+                }
+
+            });
+            
             // Analytics
             const gridColor = 'rgba(255,255,255,0.08)';
             const tickColor = 'rgba(255,255,255,0.6)';
@@ -357,7 +880,9 @@ Reject
             }
 
             loadAll();
+            loadWorkers();
             loadCharts();
+            
         }
     </script>
 </body>
