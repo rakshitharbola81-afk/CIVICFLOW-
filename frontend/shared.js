@@ -1,5 +1,5 @@
 // CivicFlow shared utilities
-const API_BASE = 'https://civicflow-api-d12q.onrender.com';
+const API_BASE = 'https://civicflow-api-d12q.onrender.com/api/v1';
 
 function getToken() { return localStorage.getItem('civicflow_token'); }
 function getRole() { return localStorage.getItem('civicflow_role'); }
