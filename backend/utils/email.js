@@ -2,7 +2,8 @@ const nodemailer=require('nodemailer');
 exports.sendComplaintEmail=async(options)=>{
     const transporter=nodemailer.createTransport({
         host:process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port:process.env.EMAIL_PORT || 5587,
+        port:process.env.EMAIL_PORT || 465,
+        secure:true,
         auth:{
             user:process.env.EMAIL_USER,
             pass:process.env.EMAIL_PASS,
